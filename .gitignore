@@ -1,0 +1,119 @@
+# -----------------------------
+# Python
+# -----------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.env/
+.venv/
+env/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# -----------------------------
+# Environment variables
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------
+# Logs & temp files
+# -----------------------------
+*.log
+logs/
+tmp/
+temp/
+
+# -----------------------------
+# IDE / Editor
+# -----------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# -----------------------------
+# OS files
+# -----------------------------
+.DS_Store
+Thumbs.db
+
+# -----------------------------
+# Testing / coverage
+# -----------------------------
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+
+# -----------------------------
+# Type checking / linting
+# -----------------------------
+.mypy_cache/
+.ruff_cache/
+
+# -----------------------------
+# Jupyter notebooks
+# -----------------------------
+.ipynb_checkpoints/
+
+# -----------------------------
+# Docker
+# -----------------------------
+*.tar
+*.gz
+*.zip
+
+# -----------------------------
+# Database / local storage
+# -----------------------------
+*.db
+*.sqlite3
+
+# -----------------------------
+# ML / embeddings / vector stores
+# -----------------------------
+*.npy
+*.npz
+*.pkl
+*.joblib
+*.onnx
+
+# Qdrant / vector DB storage
+qdrant_storage/
+storage/
+
+# -----------------------------
+# Prefect / pipeline artifacts
+# -----------------------------
+.prefect/
+.prefectignore
+
+# -----------------------------
+# Static build artifacts
+# -----------------------------
+node_modules/
+frontend/build/
+frontend/dist/
+
+# -----------------------------
+# Secrets / API keys
+# -----------------------------
+secrets.json
+*.pem
+*.key
+
+# -----------------------------
+# Misc
+# -----------------------------
+.cache/
+*.bak
+*.tmp
