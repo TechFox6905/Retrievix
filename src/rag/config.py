@@ -90,7 +90,7 @@ class Settings(BaseSettings):
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     rss: RSSSettings = Field(default_factory=RSSSettings)
 
-    rss_config_yaml_path: str = "src/configs/feeds_rss.yaml"
+    rss_config_yaml_path: str = "src/rag/configs/feeds_rss.yaml"
 
     # Pydantic v2 model config
     model_config: ClassVar[SettingsConfigDict] = SettingsConfigDict(
