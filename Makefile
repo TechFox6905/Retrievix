@@ -59,6 +59,29 @@ supabase-delete: ## Delete Supabase DB
 recreate-supabase: supabase-delete supabase-create ## Recreate Supabase
 
 # =============================================================================
+# Qdrant
+# =============================================================================
+
+.PHONY: qdrant-create
+qdrant-create: ## Create Qdrant collection
+	$(PYTHON) -m rag.infrastructure.qdrant.create_collection
+
+.PHONY: qdrant-delete
+qdrant-delete: ## Delete Qdrant collection
+	$(PYTHON) -m rag.infrastructure.qdrant.delete_collection
+
+.PHONY: qdrant-index
+qdrant-index: ## Create indexes
+	$(PYTHON) -m rag.infrastructure.qdrant.create_indexes
+
+.PHONY: qdrant-ingest
+qdrant-ingest: ## Ingest SQL → Qdrant
+	$(PYTHON) -m rag.infrastructure.qdrant.ingest_from_sql
+
+.PHONY: recreate-qdrant
+recreate-qdrant: qdrant-delete qdrant-create ## Recreate Qdrant
+
+# =============================================================================
 # Pipelines (Prefect)
 # =============================================================================
 
@@ -71,3 +94,11 @@ ingest-embeddings: ## Run embeddings flow
 	$(if $(FROM_DATE), \
 		$(PYTHON) -m rag.pipelines.flows.embeddings_ingestion_flow --from-date $(FROM_DATE), \
 		$(PYTHON) -m rag.pipelines.flows.embeddings_ingestion_flow)
+
+
+# =============================================================================
+# Composite Commands
+# =============================================================================
+
+.PHONY: recreate-all
+recreate-all: recreate-supabase recreate-qdrant ## Recreate all infra
