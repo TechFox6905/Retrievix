@@ -36,3 +36,4 @@ class SubstackArticle(Base):
     content: Mapped[str] = mapped_column(Text, nullable=False)
     published_at: Mapped[str] = mapped_column(TIMESTAMP, nullable=False)
     created_at: Mapped[str] = mapped_column(TIMESTAMP, server_default=func.now(), nullable=False)
+    embedding_status: Mapped[str] = mapped_column(String, nullable=False, default="pending")

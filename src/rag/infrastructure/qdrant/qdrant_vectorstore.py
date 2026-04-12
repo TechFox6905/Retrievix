@@ -444,42 +444,6 @@ class AsyncQdrantVectorStore:
             self.logger.error(f"Failed to generate sparse vectors: {e}")
             raise
 
-    # -----------------------
-    # Embedding helpers (memory-efficient)
-    # -----------------------
-    # async def embed_batch_async(
-    #     self, texts: list[str]
-    # ) -> tuple[list[list[float]], list[SparseVector]]:
-    #     """Generate dense and sparse embeddings concurrently for a batch of texts.
-
-    #     Args:
-    #         texts (list[str]): List of text strings to embed.
-
-    #     Returns:
-    #         tuple[list[list[float]], list[SparseVector]]: Dense and sparse embeddings.
-
-    #     Raises:
-    #         RuntimeError: If embedding generation fails.
-    #     """
-    #     try:
-    #         # Run embeddings concurrently in threads
-    #         dense_task = asyncio.to_thread(self.dense_model.embed, texts)
-    #         sparse_task = asyncio.to_thread(
-    #             self.sparse_model.embed, texts, batch_size=self.sparse_batch_size
-    #         )
-    #         dense_result, sparse_result = await asyncio.gather(dense_task, sparse_task)
-
-    #         # Convert to upsert-friendly format
-    #         dense_vecs = [vec.tolist() for vec in dense_result]
-    #         sparse_vecs = [SparseVector(indices=se.indices.tolist(),
-    #                                      values=se.values.tolist()) for se in sparse_result]
-
-    #         # Free memory
-    #         del dense_result, sparse_result
-    #         return dense_vecs, sparse_vecs
-    #     except Exception as e:
-    #         self.logger.error(f"Failed to generate embeddings: {e}")
-    #         raise RuntimeError("Error generating batch embeddings") from e
 
     async def embed_batch_async(
         self, texts: list[str]
@@ -542,9 +506,7 @@ class AsyncQdrantVectorStore:
         try:
             offset = 0
             while True:
-                query = session.query(SubstackArticle).order_by(SubstackArticle.published_at)
-                if from_date:
-                    query = query.filter(SubstackArticle.published_at >= from_date)
+                query = session.query(SubstackArticle).filter(SubstackArticle.embedding_status == "pending").order_by(SubstackArticle.published_at)
                 articles = query.offset(offset).limit(self.article_batch_size).all()
                 if not articles:
                     break
@@ -634,6 +596,8 @@ class AsyncQdrantVectorStore:
                     all_ids.extend(new_ids)
                     all_payloads.extend(new_payloads)
                     total_articles += 1
+                    if len(new_chunks) > 0:
+                        article.embedding_status = "completed"
 
                 # -------------------------------
                 # Process all chunks in batches
