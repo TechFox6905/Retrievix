@@ -61,6 +61,49 @@ class QdrantSettings(BaseModel):
     max_concurrent: int = Field(default=2, description="Maximum number of concurrent tasks")
 
 # -----------------------------
+# Text splitting
+# -----------------------------
+class TextSplitterSettings(BaseModel):
+    chunk_size: int = Field(default=4000, description="Size of text chunks")
+    chunk_overlap: int = Field(default=200, description="Size of text chunks")
+    separators: list[str] = Field(
+        default_factory=lambda: [
+            "\n---\n",
+            "\n\n",
+            "\n```\n",
+            "\n## ",
+            "\n# ",
+            "\n**",
+            "\n",
+            ". ",
+            "! ",
+            "? ",
+            " ",
+            "",
+        ],
+        description="List of separators for text splitting. The order or separators matter",
+    )
+
+
+# -----------------------------
+# Jina Settings
+# -----------------------------
+class JinaSettings(BaseModel):
+    api_key: str = Field(default="", description="Jina API key")
+    url: str = Field(default="https://api.jina.ai/v1/embeddings", description="Jina API URL")
+    model: str = Field(default="jina-embeddings-v3", description="Jina model name")  # 1024
+
+
+# -----------------------------
+# Hugging Face Settings
+# -----------------------------
+# BAAI/bge-large-en-v1.5 (1024), BAAI/bge-base-en-v1.5 (768)
+class HuggingFaceSettings(BaseModel):
+    api_key: str = Field(default="", description="Hugging Face API key")
+    model: str = Field(default="BAAI/bge-base-en-v1.5", description="Hugging Face model name")
+
+
+# -----------------------------
 # YAML loader
 # -----------------------------
 def load_yaml_feeds(path: str) -> list[FeedItem]:
@@ -89,6 +132,10 @@ class Settings(BaseSettings):
     supabase_db: SupabaseDBSettings = Field(default_factory=SupabaseDBSettings)
     qdrant: QdrantSettings = Field(default_factory=QdrantSettings)
     rss: RSSSettings = Field(default_factory=RSSSettings)
+    text_splitter: TextSplitterSettings = Field(default_factory=TextSplitterSettings)
+
+    jina: JinaSettings = Field(default_factory=JinaSettings)
+    hugging_face: HuggingFaceSettings = Field(default_factory=HuggingFaceSettings)
 
     rss_config_yaml_path: str = "src/rag/configs/feeds_rss.yaml"
 
