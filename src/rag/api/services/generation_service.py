@@ -2,8 +2,8 @@ from collections.abc import AsyncGenerator, Callable
 
 import opik
 
-from rag.api.models.api_models import SearchResult
-from rag.api.models.provider_models import MODEL_REGISTRY
+from rag.api.schemas.api_models import SearchResult
+from rag.api.schemas.provider_models import MODEL_REGISTRY
 from rag.api.services.providers.huggingface_service import generate_huggingface, stream_huggingface
 from rag.api.services.providers.openai_service import generate_openai, stream_openai
 from rag.api.services.providers.openrouter_service import generate_openrouter, stream_openrouter

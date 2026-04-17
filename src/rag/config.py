@@ -104,6 +104,30 @@ class HuggingFaceSettings(BaseModel):
 
 
 # -----------------------------
+# Openai Settings
+# -----------------------------
+class OpenAISettings(BaseModel):
+    api_key: str | None = Field(default="", description="OpenAI API key")
+    # model: str = Field(default="gpt-4o-mini", description="OpenAI model name")
+
+
+# -----------------------------
+# OpenRouter Settings
+# -----------------------------
+class OpenRouterSettings(BaseModel):
+    api_key: str = Field(default="", description="OpenRouter API key")
+    api_url: str = Field(default="https://openrouter.ai/api/v1", description="OpenRouter API URL")
+
+
+# -----------------------------
+# Opik Observability Settings
+# -----------------------------
+class OpikObservabilitySettings(BaseModel):
+    api_key: str = Field(default="", description="Opik Observability API key")
+    project_name: str = Field(default="substack-pipeline", description="Opik project name")
+
+
+# -----------------------------
 # YAML loader
 # -----------------------------
 def load_yaml_feeds(path: str) -> list[FeedItem]:
@@ -136,6 +160,9 @@ class Settings(BaseSettings):
 
     jina: JinaSettings = Field(default_factory=JinaSettings)
     hugging_face: HuggingFaceSettings = Field(default_factory=HuggingFaceSettings)
+    openai: OpenAISettings = Field(default_factory=OpenAISettings)
+    openrouter: OpenRouterSettings = Field(default_factory=OpenRouterSettings)
+    opik: OpikObservabilitySettings = Field(default_factory=OpikObservabilitySettings)
 
     rss_config_yaml_path: str = "src/rag/configs/feeds_rss.yaml"
 

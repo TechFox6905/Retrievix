@@ -3,7 +3,7 @@ import asyncio
 from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
-from rag.api.models.api_models import (
+from rag.api.schemas.api_models import (
     AskRequest,
     AskResponse,
     AskStreamingResponse,

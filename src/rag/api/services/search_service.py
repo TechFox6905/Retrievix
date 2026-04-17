@@ -10,7 +10,7 @@ from qdrant_client.models import (
     Prefetch,
 )
 
-from rag.api.models.api_models import SearchResult
+from rag.api.schemas.api_models import SearchResult
 from rag.infrastructure.qdrant.qdrant_vectorstore import AsyncQdrantVectorStore
 from rag.utils.logger_util import setup_logging
 

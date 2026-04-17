@@ -8,11 +8,13 @@ requires-python = ">=3.10"
 dependencies = [
     "beautifulsoup4>=4.14.3",
     "fastembed>=0.8.0",
+    "gradio>=6.12.0",
     "huggingface-hub>=1.10.1",
     "langchain-text-splitters>=1.1.1",
     "loguru>=0.7.3",
     "lxml>=6.0.3",
     "markdownify>=1.2.2",
+    "opik>=1.11.2",
     "prefect>=3.6.26",
     "psutil>=7.2.2",
     "psycopg2-binary>=2.9.11",

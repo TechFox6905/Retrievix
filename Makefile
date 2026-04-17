@@ -44,6 +44,22 @@ sync: ## Sync dependencies using uv.lock
 	uv pip sync uv.lock
 
 # =============================================================================
+# Run Applications
+# =============================================================================
+
+.PHONY: run-api
+run-api: ## Run FastAPI app (dev mode)
+	$(UVICORN) rag.api.main:app --reload 
+
+.PHONY: run-api-prod
+run-api-prod: ## Run FastAPI app (prod mode)
+	$(UVICORN) rag.api.main:app --host 0.0.0.0 --port 8000
+
+.PHONY: run-gradio
+run-gradio: ## Run Gradio app
+	$(PYTHON) frontend/app.py
+
+# =============================================================================
 # Supabase
 # =============================================================================
 

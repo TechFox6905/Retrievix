@@ -1,7 +1,7 @@
 #import opik
 
-from rag.api.models.api_models import SearchResult
-from rag.api.models.provider_models import ModelConfig
+from rag.api.schemas.api_models import SearchResult
+from rag.api.schemas.provider_models import ModelConfig
 
 config = ModelConfig()
 
