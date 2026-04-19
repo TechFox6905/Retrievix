@@ -36,7 +36,7 @@ ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH=/app/src
 ENV HF_HOME=/tmp/huggingface
 ENV FASTEMBED_CACHE=/tmp/fastembed_cache
-ENV PORT=8080
+ENV PORT=10000
 
 # Create cache directories
 RUN mkdir -p $HF_HOME $FASTEMBED_CACHE && chmod -R 755 $HF_HOME $FASTEMBED_CACHE
