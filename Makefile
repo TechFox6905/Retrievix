@@ -112,6 +112,27 @@ ingest-embeddings: ## Run embeddings flow
 		$(PYTHON) -m rag.pipelines.flows.embeddings_ingestion_flow)
 
 
+
+#################################################################################
+## Testing Commands
+#################################################################################
+
+unit-tests: ## Run all unit tests
+	@echo "Running all unit tests..."
+	uv run pytest tests/unit
+	@echo "All unit tests completed."
+
+integration-tests: ## Run all integration tests
+	@echo "Running all integration tests..."
+	uv run pytest tests/integration
+	@echo "All integration tests completed."
+
+all-tests: ## Run all tests
+	@echo "Running all tests..."
+	uv run pytest
+	@echo "All tests completed."
+
+
 # =============================================================================
 # Composite Commands
 # =============================================================================
