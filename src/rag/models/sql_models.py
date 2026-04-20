@@ -1,7 +1,7 @@
 import uuid
 from uuid import UUID
 
-from sqlalchemy import ARRAY, TIMESTAMP, BigInteger, String, Text, func
+from sqlalchemy import ARRAY, TIMESTAMP, BigInteger, Identity, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -16,8 +16,11 @@ class SubstackArticle(Base):
     __tablename__ = settings.supabase_db.table_name
 
     # Primary internal ID
-    id: Mapped[int] = mapped_column(BigInteger, primary_key=True, index=True)
-
+    id: Mapped[int] = mapped_column(
+    BigInteger,
+    Identity(),
+    primary_key=True
+)
     # External unique identifier
     uuid: Mapped[UUID] = mapped_column(
         PG_UUID(as_uuid=True),
