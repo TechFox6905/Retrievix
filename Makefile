@@ -49,7 +49,7 @@ sync: ## Sync dependencies using uv.lock
 
 .PHONY: run-api
 run-api: ## Run FastAPI app (dev mode)
-	$(UVICORN) rag.api.main:app --reload 
+	$(UVICORN) rag.api.main:app --host 0.0.0.0 --port 8080 --reload 
 
 .PHONY: run-api-prod
 run-api-prod: ## Run FastAPI app (prod mode)
