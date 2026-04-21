@@ -6,7 +6,7 @@ import dotenv
 from prefect import task
 
 from rag.infrastructure.qdrant.qdrant_vectorstore import AsyncQdrantVectorStore
-from rag.infrastructure.supabase.init_session import init_engine, init_session
+from rag.infrastructure.supabase.db import SessionLocal
 from rag.utils.logger_util import setup_logging
 
 dotenv.load_dotenv()
@@ -39,8 +39,7 @@ async def ingest_qdrant(from_date: datetime | None = None):
     logger.info(f"QDRANT_URL: {os.getenv('QDRANT__URL')}")
 
     vectorstore = AsyncQdrantVectorStore()
-    engine = init_engine()
-    session = init_session(engine)
+    session = SessionLocal()
 
     try:
         await vectorstore.ingest_from_sql(session=session, from_date=from_date)

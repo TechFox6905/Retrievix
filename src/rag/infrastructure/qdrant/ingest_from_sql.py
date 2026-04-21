@@ -2,7 +2,7 @@ import asyncio
 from datetime import datetime
 
 from rag.infrastructure.qdrant.qdrant_vectorstore import AsyncQdrantVectorStore
-from rag.infrastructure.supabase.init_session import init_engine, init_session
+from rag.infrastructure.supabase.db import SessionLocal
 from rag.utils.logger_util import setup_logging
 
 logger = setup_logging()
@@ -28,13 +28,13 @@ async def main() -> None:
 
     """
     logger.info("Starting ingestion of articles from SQL to Qdrant")
-    try:
-        # Initialize database engine and session
-        engine = init_engine()
-        session = init_session(engine)
 
-        # Initialize Qdrant vector store
-        vectorstore = AsyncQdrantVectorStore()
+    # Initialize database engine and session
+    session = SessionLocal()
+
+    # Initialize Qdrant vector store
+    vectorstore = AsyncQdrantVectorStore()
+    try:
 
         # Set the start date for ingestion
         from_date = datetime.strptime("2021-01-01", "%Y-%m-%d")
@@ -56,9 +56,6 @@ async def main() -> None:
         if "vectorstore" in locals():
             await vectorstore.client.close()
             logger.info("Qdrant client closed")
-        if "engine" in locals():
-            engine.dispose()
-            logger.info("Database engine disposed")
 
 
 if __name__ == "__main__":

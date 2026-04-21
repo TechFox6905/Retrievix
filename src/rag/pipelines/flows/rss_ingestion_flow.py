@@ -1,7 +1,6 @@
 from prefect import flow, unmapped
 
 from rag.config import settings
-from rag.infrastructure.supabase.init_session import init_engine
 from rag.models.article_models import FeedItem
 from rag.models.sql_models import SubstackArticle
 from rag.pipelines.tasks.fetch_rss import fetch_rss_entries
@@ -20,8 +19,7 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
     """Fetch and ingest articles from configured RSS feeds concurrently.
 
     Each feed is fetched in parallel and ingested into the database
-    with error handling at each stage. Ensures the database engine is disposed
-    after completion.
+    with error handling at each stage. A summary of ingested articles per feed is logged at the end.
 
     Args:
         article_model (type[SubstackArticle]): SQLAlchemy model for storing articles.
@@ -34,7 +32,6 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
         Exception: For unexpected errors during execution.
     """
     logger = setup_logging()
-    engine = init_engine()
     errors = []
 
     # tracking counters
@@ -52,7 +49,6 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
         # 1. Fetch articles concurrently
         fetched_articles_futures = fetch_rss_entries.map(
             feeds,
-            engine=unmapped(engine),
             article_model=unmapped(article_model),
         )
 
@@ -81,7 +77,6 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
                     fetched_articles,
                     feed,
                     article_model=article_model,
-                    engine=engine,
                 )
                 results.append(task_result)
             except Exception as e:
@@ -109,9 +104,6 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
     except Exception as e:
         logger.error(f"💥 Unexpected error in rss_ingest_flow: {e}")
         raise
-    finally:
-        engine.dispose()
-        logger.info("🔒 Database engine disposed.")
 
 
 if __name__ == "__main__":

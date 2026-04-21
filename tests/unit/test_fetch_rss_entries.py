@@ -5,7 +5,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 from test_models.test_sql_models import SubstackTestArticle
 
-from rag.infrastructure.supabase.init_session import init_engine
+from rag.infrastructure.supabase.db import SessionLocal
 from rag.models.article_models import ArticleItem, FeedItem
 from rag.pipelines.tasks.fetch_rss import fetch_rss_entries
 
@@ -43,12 +43,11 @@ def test_fetch_rss_mocked_feed() -> None:
         content_type="application/rss+xml",
     )
 
-    engine = init_engine()
     session: Session | None = None
 
     try:
         # Clear the test table before running
-        session = Session(bind=engine)
+        session: Session = SessionLocal()
         logger.info("Clearing test table 'substack_test' before test")
         session.execute(text("DELETE FROM substack_test"))
         session.commit()
@@ -57,7 +56,6 @@ def test_fetch_rss_mocked_feed() -> None:
         # Fetch articles from mocked feed
         articles = fetch_rss_entries(
             feed=test_feed,
-            engine=engine,
             article_model=SubstackTestArticle,
         )
         logger.info(f"Fetched {len(articles)} articles from {test_feed.url}")
@@ -72,5 +70,3 @@ def test_fetch_rss_mocked_feed() -> None:
         if session:
             session.close()
             logger.info("Test database session closed")
-        engine.dispose()
-        logger.info("SQLAlchemy engine disposed after test")

@@ -1,7 +1,7 @@
 from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
 
-from rag.infrastructure.supabase.init_session import init_engine
+from rag.infrastructure.supabase.db import engine
 from rag.models.sql_models import Base, SubstackArticle
 from rag.utils.logger_util import setup_logging
 
@@ -11,7 +11,7 @@ logger = setup_logging()
 def create_table() -> None:
     """Create the SubstackArticle table in the Supabase Postgres database if it does not exist.
 
-    This function initializes a SQLAlchemy engine, checks if the table defined by
+    This function inspects the database, checks if the table defined by
     `SubstackArticle.__tablename__` exists in the database, and creates it if necessary.
     The engine is properly disposed of after the operation to prevent resource leaks.
     Errors during table creation are logged and handled gracefully.
@@ -27,8 +27,6 @@ def create_table() -> None:
         Exception: For unexpected errors during table creation or inspection.
 
     """
-    # Initialize the SQLAlchemy engine
-    engine = init_engine()
     try:
         # Create an inspector to check existing tables
         inspector = inspect(engine)
@@ -49,10 +47,6 @@ def create_table() -> None:
     except Exception as e:
         logger.error(f"Unexpected error creating table '{table_name}': {e}")
         raise
-    finally:
-        # Dispose of the engine to release connections
-        engine.dispose()
-        logger.info("Database engine disposed.")
 
 
 if __name__ == "__main__":

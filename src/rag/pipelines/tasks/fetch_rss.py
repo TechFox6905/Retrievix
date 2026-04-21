@@ -3,10 +3,9 @@ from bs4 import BeautifulSoup
 from markdownify import markdownify as md
 from prefect import task
 from prefect.cache_policies import NO_CACHE
-from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from rag.infrastructure.supabase.init_session import init_session
+from rag.infrastructure.supabase.db import SessionLocal
 from rag.models.article_models import ArticleItem, FeedItem
 from rag.models.sql_models import SubstackArticle
 from rag.utils.logger_util import setup_logging
@@ -21,7 +20,6 @@ from rag.utils.logger_util import setup_logging
 )
 def fetch_rss_entries(
     feed: FeedItem,
-    engine: Engine,
     article_model: type[SubstackArticle] = SubstackArticle,
 ) -> list[ArticleItem]:
     """Fetch all RSS items from a Substack feed and convert them to ArticleItem objects.
@@ -32,7 +30,6 @@ def fetch_rss_entries(
 
     Args:
         feed (FeedItem): Metadata for the feed (name, author, URL).
-        engine (Engine): SQLAlchemy engine for database connection.
         article_model (type[SubstackArticle], optional): Model used to persist articles.
             Defaults to SubstackArticle.
 
@@ -45,7 +42,7 @@ def fetch_rss_entries(
     """
 
     logger = setup_logging()
-    session: Session = init_session(engine)
+    session: Session = SessionLocal()
     items: list[ArticleItem] = []
 
     try:
@@ -145,14 +142,11 @@ def fetch_rss_entries(
         logger.info(f"Database session closed for feed '{feed.name}'")
 
 
-# if __name__ == "__main__":
-#     from rag.infrastructure.supabase.init_session import init_engine
-
-#     engine = init_engine()
-#     test_feed = FeedItem(
-#         name="AI Echoes",
-#         author="Benito Martin",
-#         url="https://aiechoes.substack.com/feed"
-#     )
-#     articles = fetch_rss_entries(test_feed, engine)
-#     print(f"Fetched {len(articles)} articles.")
+if __name__ == "__main__":
+    test_feed = FeedItem(
+        name="AI Echoes",
+        author="Benito Martin",
+        url="https://aiechoes.substack.com/feed"
+    )
+    articles = fetch_rss_entries(test_feed)
+    print(f"Fetched {len(articles)} articles.")

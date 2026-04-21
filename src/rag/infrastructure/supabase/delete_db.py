@@ -1,7 +1,7 @@
 from sqlalchemy import inspect
 from sqlalchemy.exc import SQLAlchemyError
 
-from rag.infrastructure.supabase.init_session import init_engine
+from rag.infrastructure.supabase.db import engine
 from rag.models.sql_models import Base
 from rag.utils.logger_util import setup_logging
 
@@ -11,7 +11,7 @@ logger = setup_logging()
 def delete_all_tables() -> None:
     """Drop all tables defined in the SQLAlchemy Base metadata from the Supabase Postgres database.
 
-    This function initializes a SQLAlchemy engine, checks for existing tables, and drops them
+    This function inspects the database, checks for existing tables, and drops them
     after user confirmation to prevent accidental data loss. It is a destructive operation and
     should be used with caution. The engine is disposed of after the operation to release resources.
     Errors during table deletion are logged and handled gracefully.
@@ -27,8 +27,6 @@ def delete_all_tables() -> None:
         Exception: For unexpected errors during table inspection or deletion.
 
     """
-    # Initialize the SQLAlchemy engine
-    engine = init_engine()
     try:
         # Create an inspector to check existing tables
         inspector = inspect(engine)
@@ -59,10 +57,6 @@ def delete_all_tables() -> None:
     except Exception as e:
         logger.error(f"Unexpected error dropping tables: {e}")
         raise
-    finally:
-        # Dispose of the engine to release connections
-        engine.dispose()
-        logger.info("Database engine disposed.")
 
 
 if __name__ == "__main__":

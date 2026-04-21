@@ -1,10 +1,9 @@
 from prefect import task
 from prefect.cache_policies import NO_CACHE
-from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from rag.config import settings
-from rag.infrastructure.supabase.init_session import init_session
+from rag.infrastructure.supabase.db import SessionLocal
 from rag.models.article_models import ArticleItem, FeedItem
 from rag.models.sql_models import SubstackArticle
 from rag.utils.logger_util import setup_logging
@@ -20,8 +19,7 @@ from rag.utils.logger_util import setup_logging
 def ingest_from_rss(
     fetched_articles: list[ArticleItem],
     feed: FeedItem,
-    article_model: type[SubstackArticle],
-    engine: Engine,
+    article_model: type[SubstackArticle]
 ) -> None:
     """Ingest articles fetched from RSS (already Markdownified).
 
@@ -32,7 +30,6 @@ def ingest_from_rss(
         fetched_articles: List of ArticleItem objects to ingest.
         feed: The FeedItem representing the source feed.
         article_model: The SQLAlchemy model class for articles.
-        engine: SQLAlchemy Engine for database connection.
 
     Raises:
         RuntimeError: If ingestion completes with errors.
@@ -43,7 +40,7 @@ def ingest_from_rss(
     errors = []
     batch: list[ArticleItem] = []
 
-    session: Session = init_session(engine)
+    session: Session = SessionLocal()  
 
     try:
         for i, article in enumerate(fetched_articles, start=1):
