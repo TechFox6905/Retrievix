@@ -112,6 +112,13 @@ ingest-embeddings: ## Run embeddings flow
 		$(PYTHON) -m rag.pipelines.flows.embeddings_ingestion_flow)
 
 
+#################################################################################
+## Perfect Commands
+#################################################################################
+.PHONY: prefect-ui 
+prefect-ui: ## Start Prefect UI
+	prefect server start
+
 
 #################################################################################
 ## Testing Commands

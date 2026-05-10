@@ -2,6 +2,8 @@
 
 *A Retrieval-Augmented Engine for searching and answering questions from Substack articles*
 
+[![Watch the demo](https://img.youtube.com/vi/QDUTjjRfQ2g/maxresdefault.jpg)](https://youtu.be/QDUTjjRfQ2g)
+
 ![Diagram](static/app_diagram.png)
 
 <!-- Project Status -->
@@ -17,9 +19,6 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.116.1-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18.0-61DAFB?style=flat&logo=react&logoColor=black)](https://react.dev/)
 
-
-
- ![React App](static/react-app.png)
 
 ---
 
@@ -73,6 +72,10 @@ cp .env.example .env
 ```
 
 ```bash
+
+# Create Supabase DB and Qdrant Collection
+make supabase-create
+make qdrant-create
 
 # Article Ingestion
 make ingest-rss
