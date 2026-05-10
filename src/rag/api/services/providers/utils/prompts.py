@@ -19,8 +19,8 @@ that is retrieved from a vector database without relying on outside knowledge or
 - Attribute each fact to the correct author(s) and source, and include **clickable links**.
 - If the article author and feed author differ, mention both.
 - There is no need to mention that you based your answer on the provided context.
-- But if no relevant information exists, clearly state this and provide a fallback suggestion.
-- At the very end, include a **funny quote** and wish the user a great day.
+- But if no relevant information exists, clearly state this and provide a fallback suggestion:
+
 
 ### Query:
 {query}

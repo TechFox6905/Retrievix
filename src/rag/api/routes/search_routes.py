@@ -60,7 +60,7 @@ async def ask_with_generation(request: Request, ask: AskRequest):
     """
     # Step 1: Retrieve relevant documents with filters
     results: list[SearchResult] = await query_with_filters(
-        request,
+        request=request,
         query_text=ask.query_text,
         feed_author=ask.feed_author,
         feed_name=ask.feed_name,
@@ -101,7 +101,7 @@ async def ask_with_generation_stream(request: Request, ask: AskRequest):
     """
     # Step 1: Retrieve relevant documents with filters
     results: list[SearchResult] = await query_with_filters(
-        request,
+        request=request,
         query_text=ask.query_text,
         feed_author=ask.feed_author,
         feed_name=ask.feed_name,

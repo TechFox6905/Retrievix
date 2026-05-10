@@ -502,7 +502,6 @@ class AsyncQdrantVectorStore:
         """
         # Query is synchronous. For 5 articles ok
         # But concurrent requests may be needed for larger batches (e.g. 100+ articles).
-        # In this case change to async the init_session.py
         try:
             offset = 0
             while True:
@@ -550,6 +549,13 @@ class AsyncQdrantVectorStore:
 
                 for article in articles:
                     chunks = self.splitter.split_text(article.content)
+
+                    if chunks:
+                        avg_len = sum(len(c) for c in chunks) / len(chunks)
+                        self.logger.info(
+                            f"Chunks: {len(chunks)}, Avg length: {avg_len:.0f}"
+                        )
+                        
                     ids = [
                         str(
                             uuid.UUID(

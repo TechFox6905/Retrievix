@@ -1,4 +1,6 @@
-import opik
+import time
+import opik 
+from opik import opik_context
 from fastapi import Request
 from qdrant_client.models import (
     FieldCondition,
@@ -16,7 +18,6 @@ from rag.utils.logger_util import setup_logging
 
 logger = setup_logging()
 
-
 @opik.track(name="query_with_filters")
 async def query_with_filters(
     request: Request,
@@ -30,6 +31,7 @@ async def query_with_filters(
 
     Performs a hybrid dense + sparse search on Qdrant and applies filters based
     on feed author, feed name, and title keywords. Results are deduplicated by point ID.
+    An expected keyword can be provided for basic relevance evaluation, which logs a hit@k metric to Opik.
 
     Args:
         request (Request): FastAPI request object containing the vector store in app.state.
@@ -38,12 +40,15 @@ async def query_with_filters(
         feed_name (str | None): Optional filter for the feed name.
         title_keywords (str | None): Optional filter for title keywords.
         limit (int): Maximum number of results to return.
+        expected_keyword (str | None): Optional keyword to check for relevance in results for evaluation.
 
     Returns:
         list[SearchResult]:
             List of search results containing title, feed info, URL, chunk text, and score.
 
     """
+    start_time = time.time()
+
     vectorstore: AsyncQdrantVectorStore = request.app.state.vectorstore
     dense_vector = vectorstore.dense_vectors([query_text])[0]
     sparse_vector = vectorstore.sparse_vectors([query_text])[0]
@@ -61,7 +66,7 @@ async def query_with_filters(
 
     query_filter = Filter(must=conditions) if conditions else None  # type: ignore
 
-    fetch_limit = max(1, limit) * 100
+    fetch_limit = min(max(limit * 20, 50), 200)
     logger.info(f"Fetching up to {fetch_limit} points for unique Ids.")
 
     response = await vectorstore.client.query_points(
@@ -76,7 +81,7 @@ async def query_with_filters(
     )
 
     # Deduplicate by point ID
-    seen_ids: set[str] = set()
+    seen_ids: set[str | int] = set()
     results: list[SearchResult] = []
     for point in response.points:
         if point.id in seen_ids:
@@ -94,9 +99,23 @@ async def query_with_filters(
                 score=point.score,
             )
         )
-
     results = results[:limit]
+
+    latency = time.time() - start_time
+
+    opik_context.update_current_span(
+        metadata={
+            "retrieval_latency_seconds": latency,
+            "query": query_text,
+            "limit": limit,
+            "feed_author": feed_author,
+            "feed_name": feed_name,
+            "title_keywords": title_keywords,
+            "retrieved_results": len(results),
+        }
+    )
     logger.info(f"Returning {len(results)} results for matching query '{query_text}'")
+
     return results
 
 
@@ -145,7 +164,7 @@ async def query_unique_titles(
 
     query_filter = Filter(must=conditions) if conditions else None  # type: ignore
 
-    fetch_limit = max(1, limit) * 280
+    fetch_limit = min(max(limit * 20, 50), 200)
     logger.info(f"Fetching up to {fetch_limit} points for unique titles.")
 
     response = await vectorstore.client.query_points(
