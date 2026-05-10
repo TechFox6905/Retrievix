@@ -55,9 +55,10 @@ run-api: ## Run FastAPI app (dev mode)
 run-api-prod: ## Run FastAPI app (prod mode)
 	$(UVICORN) rag.api.main:app --host 0.0.0.0 --port 8000
 
-.PHONY: run-gradio
-run-gradio: ## Run Gradio app
-	$(PYTHON) frontend/app.py
+.PHONY: run-frontend
+run-frontend: ## Run React frontend
+	npm run dev
+
 
 # =============================================================================
 # Supabase

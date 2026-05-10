@@ -18,36 +18,29 @@ const ChatMessage = ({ msg }: { msg: Message }) => {
   }
 
   if (msg.role === "ai") {
-    return (
-      <div className="flex justify-start">
-        <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 w-full">
-          <div className="text-xs text-gray-400 mb-2">AI</div>
+  return (
+    <div className="flex justify-start">
+      <div className="bg-gray-800 p-6 rounded-2xl border border-gray-700 w-full">
+        <div className="text-xs text-gray-400 mb-2">AI</div>
 
-          {!msg.done ? (
-            <div className="whitespace-pre-wrap text-gray-300">
-              {msg.content}
-              
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-                <div className="markdown-content">
-                    
-                    <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw, rehypeHighlight]}
-                    
-                    >
-                    {msg.content as string}
-                    
-                    </ReactMarkdown>
+        <div className="overflow-x-auto">
+          <div className="markdown-content">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw, rehypeHighlight]}
+            >
+              {msg.content as string}
+            </ReactMarkdown>
 
-                </div>
-            </div>
-          )}
+            {!msg.done && (
+              <span className="inline-block w-2 h-5 ml-1 bg-orange-400 animate-pulse rounded-sm" />
+            )}
+          </div>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   if (msg.role === "search") {
     return (

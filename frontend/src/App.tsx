@@ -7,6 +7,7 @@ import UnifiedForm from "./components/UnifiedForm";
 import { providers, getModelsForProvider } from "./data/modelRegistry";
 import { feeds } from "./data/feedsAndProviders";
 import type { FormState } from "./types";
+import EmptyState from "./components/EmptyState";
 
 const App: React.FC = () => {
   const [mode, setMode] = useState<"Search" | "AI">("AI");
@@ -62,18 +63,28 @@ const App: React.FC = () => {
         </div>
 
         {/* CHAT */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {messages.map((msg) => (
-            <ChatMessage key={msg.id} msg={msg} />
-          ))}
-          {/* Loading */}
-          {loading && (
-            <div className="max-w-3xl mx-auto text-gray-400 text-sm animate-pulse">
-              AI is thinking...
+        <div className="flex-1 overflow-y-auto p-6">
+          {messages.length === 0 ? (
+            <EmptyState
+              formState={formState}
+              handleFormChange={handleFormChange}
+              handleSubmit={handleSubmit}
+            />
+          ) : (
+            <div className="space-y-6">
+              {messages.map((msg) => (
+                <ChatMessage key={msg.id} msg={msg} />
+              ))}
+              {/* Loading */}
+              {loading && (
+                <div className="max-w-3xl mx-auto text-gray-400 text-sm animate-pulse">
+                  AI is thinking...
+                </div>
+              )}
+
+              <div ref={chatEndRef} />
             </div>
           )}
-
-          <div ref={chatEndRef} />
         </div>
 
         {/* INPUT */}
