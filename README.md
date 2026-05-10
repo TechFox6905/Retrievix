@@ -5,6 +5,7 @@
 ## End-to-End Demo
 [![Watch the demo](static/thumbnail.png)](https://youtu.be/QDUTjjRfQ2g)
 
+## System Architecture
 ![Diagram](static/app_diagram.png)
 
 <!-- Project Status -->
@@ -54,6 +55,7 @@ For user interaction, this repository includes a React UI for local exploration 
 
 ### ⬇️ Installation
 
+#### ⚙️ Local Development Setup
 Clone the repository, install dependencies, and set up your environment variables:
 
 ```bash
@@ -96,6 +98,36 @@ npm run dev
 
 ---
 
+#### 🐳 Docker Setup
+
+Clone the repository and run the complete stack using Docker Compose.
+
+```
+git clone https://github.com/TechFox6905/Retrievix.git
+cd Retrievix
+
+# Configure Environment Variables
+copy .env.example .env
+
+# Start Services
+docker compose up --build
+
+Run in detached mode:
+
+docker compose up -d --build
+```
+Access Applications
+
+| Service          | URL                             |
+| ---------------- | ------------------------------- |
+| Frontend         | http://localhost:5173           |
+| Backend API      | http://localhost:8000           |
+| FastAPI Docs     | http://localhost:8000/docs      |
+| Qdrant Dashboard | http://localhost:6333/dashboard |
+```
+# Stop Services
+docker compose down
+```
 
 ## 📡 API Endpoints
 
