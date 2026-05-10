@@ -103,8 +103,22 @@ def rss_ingest_flow(article_model: type[SubstackArticle] = SubstackArticle) -> N
 
         logger.info(f"📝 Total ingested across all feeds: {total_ingested}")
 
+        # ---- Final flow status ----
+        successful_feeds = len(feeds) - len(errors)
+
+        if successful_feeds == 0:
+            raise RuntimeError("All RSS feeds failed.")
+
         if errors:
-            raise RuntimeError(f"Flow completed with errors: {errors}")
+            logger.warning(
+                f"⚠️ Partial failures detected "
+                f"({len(errors)}/{len(feeds)} feeds failed): {errors}"
+            )
+
+        logger.info(
+            f"✅ Flow completed successfully with "
+            f"{successful_feeds}/{len(feeds)} successful feeds."
+        )
 
     except Exception as e:
         logger.error(f"💥 Unexpected error in rss_ingest_flow: {e}")
