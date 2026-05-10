@@ -34,16 +34,52 @@ def setup_logging(log_level: str | None = None):
     except RuntimeError:
         # Outside Prefect → Loguru
         loguru_logger.remove()
+        
+        # Create logs directory
+        os.makedirs("logs", exist_ok=True)
+
+        LOG_FORMAT = (
+            "<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
+            "<level>{level}</level> | "
+            "<cyan>{module}</cyan>:<cyan>{function}</cyan> - "
+            "<level>{message}</level>"
+        )
+
+        # Console logging
         loguru_logger.add(
             sys.stdout,
             level=log_level,
             colorize=True,
             backtrace=True,
             diagnose=True,
-            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
-            "<level>{level}</level> | <cyan>{module}</cyan>:<cyan>{function}</cyan> - "
-            "<level>{message}</level>",
+            enqueue=True,
+            format=LOG_FORMAT,
         )
+
+        # Main application log file
+        loguru_logger.add(
+            "logs/app.log",
+            level=log_level,
+            rotation="10 MB",
+            retention="14 days",
+            compression="zip",
+            enqueue=True,
+            backtrace=True,
+            diagnose=False,
+            format=LOG_FORMAT,
+        )
+
+        # Error-only log file
+        loguru_logger.add(
+            "logs/error.log",
+            level="ERROR",
+            rotation="5 MB",
+            retention="30 days",
+            compression="zip",
+            enqueue=True,
+            format=LOG_FORMAT,
+        )
+
         loguru_logger.debug(f"Logging initialized at {log_level} level (Loguru).")
         return loguru_logger
 
@@ -88,4 +124,10 @@ def log_batch_status(
         f" | system_mem: used={sys_used_mb:.1f}MB ({sys_percent:.0f}%)"
     )
     logger.info(details)
-    return details
+    return {
+        "details": details,
+        "rss_mb": rss_mb,
+        "vms_mb": vms_mb,
+        "sys_used_mb": sys_used_mb,
+        "sys_percent": sys_percent,
+    }

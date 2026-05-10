@@ -72,7 +72,7 @@ class AsyncQdrantVectorStore:
         # -------------------------------
         # Qdrant client & collection
         # -------------------------------
-        self.client = AsyncQdrantClient(url=vector_db.url, api_key=vector_db.api_key)
+        self.client = AsyncQdrantClient(url=vector_db.url, api_key=vector_db.api_key, timeout=300)
         self.collection_name = vector_db.collection_name
         self.splitter = TextSplitter()
         self.sparse_vectors_config = {
@@ -416,7 +416,7 @@ class AsyncQdrantVectorStore:
                 return self.jina_dense_vectors(texts)
             elif self.use_hf:
                 return self.hf_dense_vectors(texts)
-            return [vec.tolist() for vec in self.dense_model.embed(texts)]
+            return [vec.tolist() for vec in self.dense_model.embed(texts, batch_size=self.embed_batch_size)]
         except Exception as e:
             self.logger.error(f"Failed to generate dense vectors: {e}")
             raise
@@ -505,7 +505,14 @@ class AsyncQdrantVectorStore:
         try:
             offset = 0
             while True:
-                query = session.query(SubstackArticle).filter(SubstackArticle.embedding_status == "pending").order_by(SubstackArticle.published_at)
+                query = session.query(SubstackArticle).filter(
+                    SubstackArticle.embedding_status == "pending").order_by(SubstackArticle.published_at)
+                
+                if from_date:
+                    query = query.filter(
+                        SubstackArticle.published_at >= from_date
+                    )
+                
                 articles = query.offset(offset).limit(self.article_batch_size).all()
                 if not articles:
                     break
@@ -538,13 +545,23 @@ class AsyncQdrantVectorStore:
             f"from SQL (batch size: {self.article_batch_size})"
         )
         try:
-            # Limit concurrency to avoid ingestion overload into Qdrant
-            semaphore = asyncio.Semaphore(max(2, self.max_concurrent))
             total_articles = 0
             total_chunks = 0
+            total_existing_chunks = 0
+            total_batches = 0
+            failed_batches = 0
+
+            peak_rss_mb = 0.0
+            peak_system_mem_pct = 0.0
+            batch_speeds = []
+            
+
             start_time = time.time()  # cumulative start time
 
             async for articles in self._article_batch_generator(session, from_date=from_date):
+                successful_articles = []
+                batch_article_data = []
+                batch_all_ids = []
                 all_chunks, all_ids, all_payloads = [], [], []
 
                 for article in articles:
@@ -579,23 +596,57 @@ class AsyncQdrantVectorStore:
                         for i, chunk in enumerate(chunks)
                     ]
 
-                    # Check existing IDs
-                    existing_points = await self.client.retrieve(
-                        collection_name=self.collection_name, ids=ids
+                    batch_article_data.append(
+                        {
+                            "article": article,
+                            "chunks": chunks,
+                            "ids": ids,
+                            "payloads": payloads,
+                        }
                     )
-                    existing_ids = {p.id for p in existing_points}
+
+                    batch_all_ids.extend(ids)
+
+                existing_points = await self.client.retrieve(
+                    collection_name=self.collection_name,
+                    ids=batch_all_ids,
+                )
+
+                existing_ids = {p.id for p in existing_points}
+
+                total_existing_chunks += len(existing_ids)
+
+                for data in batch_article_data:
+                    article = data["article"]
+                    chunks = data["chunks"]
+                    ids = data["ids"]
+                    payloads = data["payloads"]
+                    
+                    article_existing_ids = {
+                        id_ for id_ in ids
+                        if id_ in existing_ids
+                    }
 
                     new_chunks = [
-                        c for c, id_ in zip(chunks, ids, strict=False) if id_ not in existing_ids
+                        c for c, id_ in zip(chunks, ids, strict=False)
+                        if id_ not in existing_ids
                     ]
-                    new_ids = [id_ for id_ in ids if id_ not in existing_ids]
+
+                    new_ids = [
+                        id_ for id_ in ids
+                        if id_ not in existing_ids
+                    ]
+
                     new_payloads = [
-                        p for p, id_ in zip(payloads, ids, strict=False) if id_ not in existing_ids
+                        p for p, id_ in zip(payloads, ids, strict=False)
+                        if id_ not in existing_ids
                     ]
 
                     self.logger.info(
-                        f"Article '{article.title}': total chunks = {len(chunks)}, "
-                        f"existing chunks = {len(existing_ids)}, new chunks = {len(new_chunks)}"
+                        f"Article '{article.title}': "
+                        f"total chunks = {len(chunks)}, "
+                        f"existing chunks = {len(article_existing_ids)}, "
+                        f"new chunks = {len(new_chunks)}"
                     )
 
                     all_chunks.extend(new_chunks)
@@ -603,7 +654,7 @@ class AsyncQdrantVectorStore:
                     all_payloads.extend(new_payloads)
                     total_articles += 1
                     if len(new_chunks) > 0:
-                        article.embedding_status = "completed"
+                        successful_articles.append(article)
 
                 # -------------------------------
                 # Process all chunks in batches
@@ -614,9 +665,13 @@ class AsyncQdrantVectorStore:
                     sub_payloads = all_payloads[start : start + self.upsert_batch_size]
 
                     batch_start_time = time.time()  # start time for this batch
-                    dense_vecs, sparse_vecs = await self.embed_batch_async(sub_chunks)
 
-                    async with semaphore:
+                    embed_start = time.time()
+                    dense_vecs, sparse_vecs = await self.embed_batch_async(sub_chunks)
+                    embed_elapsed = time.time() - embed_start
+
+                    try:
+                        upsert_start = time.time()
                         await self.client.upsert(
                             collection_name=self.collection_name,
                             points=Batch(
@@ -625,6 +680,12 @@ class AsyncQdrantVectorStore:
                                 vectors={"Dense": dense_vecs, "Sparse": sparse_vecs},  # type: ignore
                             ),
                         )
+                        upsert_elapsed = time.time() - upsert_start
+
+                    except Exception as e:
+                        self.logger.error(f"Failed to upsert batch to Qdrant: {e}")
+                        failed_batches += 1
+                        raise RuntimeError("Error upserting batch to Qdrant") from e
 
                     total_chunks += len(sub_chunks)
 
@@ -633,36 +694,81 @@ class AsyncQdrantVectorStore:
                     # -------------------------------
                     batch_elapsed = time.time() - batch_start_time
                     batch_speed = len(sub_chunks) / batch_elapsed if batch_elapsed > 0 else 0
+                    batch_speeds.append(batch_speed)
+                    total_batches += 1
 
                     cumulative_elapsed = time.time() - start_time
                     cumulative_speed = (
                         total_chunks / cumulative_elapsed if cumulative_elapsed > 0 else 0
                     )
-                    self.log_batch_status(
+                    metrics = self.log_batch_status(
                         action="Batch ingested",
                         batch_size=len(sub_chunks),
                         total_articles=total_articles,
                         total_chunks=total_chunks,
                     )
 
+                    peak_rss_mb = max(peak_rss_mb, metrics["rss_mb"])
+                    peak_system_mem_pct = max(
+                        peak_system_mem_pct,
+                        metrics["sys_percent"],
+                    )
+
                     self.logger.info(
                         f"Batch ingested: {len(sub_chunks)} chunks | "
+                        f"Embed: {embed_elapsed:.2f}s | "
+                        f"Upsert: {upsert_elapsed:.2f}s | "
                         f"Batch speed: {batch_speed:.2f} chunks/sec | "
                         f"Cumulative speed: {cumulative_speed:.2f} chunks/sec | "
                         f"Total articles: {total_articles}, Total chunks: {total_chunks}"
                     )
 
                     del dense_vecs, sparse_vecs, sub_chunks, sub_ids, sub_payloads
-                    gc.collect()
+
+                    if total_batches % 5 == 0:
+                        gc.collect()
+                
+              
+                for article in successful_articles:
+                    article.embedding_status = "completed"
+
+                session.commit()
 
             # -------------------------------
             # Final cumulative average
             # -------------------------------
             final_elapsed = time.time() - start_time
-            final_speed = total_chunks / final_elapsed if final_elapsed > 0 else 0
+
+            final_chunk_speed = (
+                total_chunks / final_elapsed
+                if final_elapsed > 0 else 0
+            )
+
+            final_article_speed = (
+                total_articles / final_elapsed
+                if final_elapsed > 0 else 0
+            )
+
+            avg_batch_speed = (
+                sum(batch_speeds) / len(batch_speeds)
+                if batch_speeds else 0
+            )
+
             self.logger.info(
-                f"Ingestion complete: {total_articles} articles, {total_chunks} chunks, "
-                f"final average speed = {final_speed:.2f} chunks/sec"
+                "\n"
+                "================ INGESTION SUMMARY ================\n"
+                f"Total articles processed : {total_articles}\n"
+                f"Total chunks ingested    : {total_chunks}\n"
+                f"Total batches processed  : {total_batches}\n"
+                f"Failed batches           : {failed_batches}\n"
+                f"Total runtime            : {final_elapsed:.2f} sec\n"
+                f"Average chunks/sec       : {final_chunk_speed:.2f}\n"
+                f"Average articles/sec     : {final_article_speed:.2f}\n"
+                f"Average batch speed      : {avg_batch_speed:.2f}\n"
+                f"Peak RSS memory          : {peak_rss_mb:.2f} MB\n"
+                f"Peak system memory       : {peak_system_mem_pct:.2f}%\n"
+                f"Deduplicated chunks skipped : {total_existing_chunks}\n"
+                "=================================================="
             )
         except Exception as e:
             self.logger.error(f"Failed to ingest articles to Qdrant: {e}")

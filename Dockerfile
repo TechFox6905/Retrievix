@@ -42,7 +42,10 @@ ENV PORT=10000
 RUN mkdir -p $HF_HOME $FASTEMBED_CACHE && chmod -R 755 $HF_HOME $FASTEMBED_CACHE
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s \
+            --timeout=10s \
+            --start-period=90s \
+            --retries=5 \
     CMD curl -f http://localhost:$PORT/health || exit 1
 
 # Expose Cloud Run port
