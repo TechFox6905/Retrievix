@@ -33,6 +33,15 @@ Example:
         ...
     finally:
         session.close()
+        
+Concurrency Model:
+- This project uses synchronous SQLAlchemy sessions (Session).
+- This is acceptable because:
+    - Database operations are primarily executed in background jobs and pipelines.
+    - The FastAPI layer does not currently perform SQL database operations.
+- If SQLAlchemy is introduced into async FastAPI routes in the future,
+  this pattern may block the event loop under high concurrency.
+  In that case, consider migrating to AsyncSession with an async engine.
 
 Notes:
 - Do NOT create global/shared sessions.
