@@ -83,3 +83,11 @@ class AskStreamingResponse(BaseModel):
     chunks: list[AskStreamingChunk] = Field(
         default_factory=list, description="Streamed chunks of generated text"
     )
+
+# -----------------------
+# Evaluation sample model
+# -----------------------
+class EvaluationSample(BaseModel):
+    question: str
+    ground_truth: str
+    expected_keywords: list[str] | None = None

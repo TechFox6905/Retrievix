@@ -1,0 +1,123 @@
+[
+  {
+    "question": "Why was vLLM preferred over llama.cpp in the code review system?",
+    "ground_truth": "vLLM was selected because it supports high-throughput concurrent inference using continuous batching and prefix KV-cache reuse for shared prompts, making it better suited for multi-user code review workloads than llama.cpp.",
+    "expected_keywords": [
+      "vLLM",
+      "llama.cpp",
+      "continuous batching",
+      "concurrent inference",
+      "prefix caching",
+      "KV cache",
+      "shared prompts",
+      "throughput",
+      "multi-user",
+      "performance"
+    ]
+  },
+  {
+    "question": "What is the difference between semantic caching and exact-match caching?",
+    "ground_truth": "Exact-match caching returns responses only when the query string matches an existing cached key, usually through hashing. Semantic caching instead uses embeddings and vector similarity search to retrieve responses for semantically similar or paraphrased queries.",
+    "expected_keywords": [
+      "semantic caching",
+      "exact-match caching",
+      "exact match",
+      "hashing",
+      "embeddings",
+      "vector similarity",
+      "similarity search",
+      "paraphrased queries",
+      "cache lookup",
+      "Redis"
+    ]
+  },
+  {
+    "question": "Why is Direct Preference Optimization used after supervised fine-tuning?",
+    "ground_truth": "Supervised fine-tuning teaches the model task behavior and formatting patterns, while DPO further aligns the model using preference pairs by optimizing chosen responses over rejected ones without requiring a separate reward model.",
+    "expected_keywords": [
+      "DPO",
+      "SFT",
+      "supervised fine-tuning",
+      "preference optimization",
+      "chosen responses",
+      "rejected responses",
+      "alignment",
+      "reward model",
+      "human preferences"
+    ]
+  },
+  {
+    "question": "Why is PyInstaller useful in a desktop LLM application?",
+    "ground_truth": "PyInstaller packages the Python runtime, dependencies, and native llama.cpp libraries into a standalone executable, allowing end users to run the desktop LLM application without manually installing Python or dependencies.",
+    "expected_keywords": [
+      "PyInstaller",
+      "standalone executable",
+      "Python runtime",
+      "dependencies",
+      "llama.cpp",
+      "desktop application",
+      "packaging",
+      "distribution"
+    ]
+  },
+  {
+    "question": "What does AgentCore Gateway do in AWS agent architectures?",
+    "ground_truth": "AgentCore Gateway acts as the tool access layer in AWS agent systems by managing MCP-compatible tools, enabling secure Lambda invocation, and allowing agents to discover and execute external tools dynamically.",
+    "expected_keywords": [
+      "AgentCore Gateway",
+      "AWS agents",
+      "MCP",
+      "tool discovery",
+      "Lambda",
+      "tool invocation",
+      "secure access",
+      "agent tools",
+      "gateway"
+    ]
+  },
+  {
+    "question": "How does prefix caching improve vLLM inference performance?",
+    "ground_truth": "Prefix caching in vLLM reuses KV-cache states for shared prompt prefixes across multiple requests, reducing redundant computation, lowering latency, and improving GPU inference throughput.",
+    "expected_keywords": [
+      "prefix caching",
+      "KV cache",
+      "shared prefixes",
+      "shared prompts",
+      "reuse",
+      "latency",
+      "throughput",
+      "GPU inference",
+      "vLLM",
+      "performance"
+    ]
+  },
+  {
+    "question": "What tradeoff comes with using the --enforce-eager flag in vLLM?",
+    "ground_truth": "The --enforce-eager flag disables CUDA graph execution and forces eager mode, which reduces GPU memory consumption and improves compatibility at the cost of lower inference throughput.",
+    "expected_keywords": [
+      "enforce-eager",
+      "eager execution",
+      "CUDA graphs",
+      "GPU memory",
+      "throughput",
+      "performance tradeoff",
+      "vLLM",
+      "memory optimization"
+    ]
+  },
+  {
+    "question": "How does a two-level caching system help LLM applications?",
+    "ground_truth": "A two-level caching architecture combines exact-match caching for identical queries with semantic caching for similar queries, increasing cache hit rates while reducing latency and unnecessary LLM inference calls.",
+    "expected_keywords": [
+      "two-level caching",
+      "exact-match caching",
+      "semantic caching",
+      "cache hit rate",
+      "latency",
+      "LLM inference",
+      "similarity search",
+      "hash-based cache",
+      "performance"
+    ]
+  }
+]
