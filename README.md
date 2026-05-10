@@ -2,7 +2,8 @@
 
 *A Retrieval-Augmented Engine for searching and answering questions from Substack articles*
 
-[![Watch the demo](https://img.youtube.com/vi/QDUTjjRfQ2g/maxresdefault.jpg)](https://youtu.be/QDUTjjRfQ2g)
+## End-to-End Demo
+[![Watch the demo](static/thumbnail.png)](https://youtu.be/QDUTjjRfQ2g)
 
 ![Diagram](static/app_diagram.png)
 
