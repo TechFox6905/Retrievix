@@ -1,9 +1,12 @@
 import asyncio
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
+from rag.agents.context import AgentRuntimeContext
+from rag.agents.graph import run_agent_rag
 from rag.api.schemas.api_models import (
+    AskAgentResponse,
     AskRequest,
     AskResponse,
     AskStreamingResponse,
@@ -80,6 +83,44 @@ async def ask_with_generation(request: Request, ask: AskRequest):
         sources=results,
         model=answer_data.get("model", None),
         finish_reason=answer_data.get("finish_reason", None),
+    )
+
+
+@router.post("/ask/agent", response_model=AskAgentResponse)
+async def ask_with_agent(request: Request, ask: AskRequest):
+    """Non-streaming Q&A via a linear LangGraph agent (retrieve → generate).
+
+    Uses the same retrieval filters and LLM providers as ``/ask``; adds an
+    explicit agent pipeline and returns completed step names.
+    """
+    if not ask.query_text or not str(ask.query_text).strip():
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    async def retrieve_bound() -> list[SearchResult]:
+        return await query_with_filters(
+            request=request,
+            query_text=ask.query_text,
+            feed_author=ask.feed_author,
+            feed_name=ask.feed_name,
+            title_keywords=ask.title_keywords,
+            limit=ask.limit,
+        )
+
+    runtime = AgentRuntimeContext(
+        retrieve=retrieve_bound,
+        provider=ask.provider,
+        selected_model=ask.model,
+    )
+    agent_out = await run_agent_rag(query_text=ask.query_text.strip(), context=runtime)
+
+    return AskAgentResponse(
+        query=ask.query_text,
+        provider=ask.provider,
+        answer=agent_out["answer"],
+        sources=agent_out["sources"],
+        model=agent_out.get("model"),
+        finish_reason=agent_out.get("finish_reason"),
+        steps=agent_out.get("steps", []),
     )
 
 

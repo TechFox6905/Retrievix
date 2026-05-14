@@ -70,6 +70,15 @@ class AskResponse(BaseModel):
     )
 
 
+class AskAgentResponse(AskResponse):
+    """Same as AskResponse plus ordered agent steps (LangGraph pipeline)."""
+
+    steps: list[str] = Field(
+        default_factory=list,
+        description="Agent steps completed for this request, in order",
+    )
+
+
 # -----------------------
 # Streaming "response" documentation
 # -----------------------
