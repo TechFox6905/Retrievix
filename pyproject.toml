@@ -6,6 +6,8 @@ readme = "README.md"
 requires-python = ">=3.10"
 
 dependencies = [
+    "langchain-core>=0.3.0",
+    "langgraph>=0.2.0",
     "beautifulsoup4>=4.14.3",
     "fastembed>=0.8.0",
     "gradio>=6.12.0",
@@ -54,6 +56,7 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = [ "tests" ]
+pythonpath = [ "src" ]
 python_files = [ "test_*.py" ]
 addopts = "-ra -v -s"
 filterwarnings = [

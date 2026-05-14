@@ -93,7 +93,7 @@ make run-api
 cd frontend
 copy .env.example .env # (in Frontend)
 npm i
-npm run dev
+make run-frontend
 ```
 
 ---
